@@ -28,6 +28,11 @@ class CountryRecyclerViewAdapter(private val resource: Int, private val listener
         holder.bind(countries[position])
     }
 
+    fun loadCountries(countries: List<Country>) {
+        this.countries = countries
+        notifyDataSetChanged()
+    }
+
     override fun getItemCount(): Int { return countries.size }
     override fun getItemViewType(position: Int): Int { return getLayoutIdForPosition() }
     private fun getLayoutIdForPosition(): Int { return resource }

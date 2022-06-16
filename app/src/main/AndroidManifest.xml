@@ -12,8 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/SplashScreenTheme">
+
         <activity
             android:name=".country.view.CountryMapActivity"
+            android:theme="@style/Theme.InterGrupoAndroidTest"
             android:exported="false" />
 
         <meta-data

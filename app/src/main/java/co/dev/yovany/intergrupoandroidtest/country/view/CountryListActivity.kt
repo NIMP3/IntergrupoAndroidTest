@@ -1,22 +1,21 @@
 package co.dev.yovany.intergrupoandroidtest.country.view
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.view.Menu
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import co.dev.yovany.intergrupoandroidtest.R
 import co.dev.yovany.intergrupoandroidtest.common.MessageType
 import co.dev.yovany.intergrupoandroidtest.country.CountryPresenter
 import co.dev.yovany.intergrupoandroidtest.country.ICountryContract
 import co.dev.yovany.intergrupoandroidtest.country.model.Country
 import co.dev.yovany.intergrupoandroidtest.databinding.ActivityCountryListBinding
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 
 class CountryListActivity : AppCompatActivity(), ICountryContract.ICountryListView {
 
+    private var countries = emptyList<Country>()
     private lateinit var binding: ActivityCountryListBinding
     private lateinit var adapter: CountryRecyclerViewAdapter
     private lateinit var presenter: ICountryContract.ICountryPresenter
@@ -25,9 +24,9 @@ class CountryListActivity : AppCompatActivity(), ICountryContract.ICountryListVi
         super.onCreate(savedInstanceState)
 
         setTheme(R.style.Theme_InterGrupoAndroidTest)
-
         binding = ActivityCountryListBinding.inflate(layoutInflater)
 
+        this.setSupportActionBar(binding.actionBar.toolbar)
         adapter = CountryRecyclerViewAdapter(R.layout.cardview_country, listener = { showCountryInMap(it)})
         binding.contentCountryList.rvSubsystemList.adapter = adapter
 
@@ -37,9 +36,41 @@ class CountryListActivity : AppCompatActivity(), ICountryContract.ICountryListVi
         setContentView(binding.root)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.search_menu, menu)
+        val searchView: SearchView = menu?.findItem(R.id.actionSearch)?.actionView as SearchView
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                showProgressbar()
+                newText?.let { searchCountryByName(it) }
+                return false
+            }
+
+        })
+
+        return true
+    }
+
     override fun showCountries(countries: List<Country>) {
-        adapter.countries = countries
-        adapter.notifyDataSetChanged()
+        this.countries = countries
+        adapter.loadCountries(countries)
+    }
+
+    private fun searchCountryByName(name: String) {
+        val filteredList = mutableListOf<Country>()
+        countries.forEach { country ->
+            if (country.name.lowercase().contains(name.lowercase())) filteredList.add(country)
+        }
+
+        if (filteredList.isEmpty()) showMessage("${getString(R.string.message_no_data)} datos.", MessageType.INFO)
+        else {
+            hideProgressbar()
+            adapter.loadCountries(filteredList)
+        }
     }
 
     private fun showCountryInMap(country: Country) {
