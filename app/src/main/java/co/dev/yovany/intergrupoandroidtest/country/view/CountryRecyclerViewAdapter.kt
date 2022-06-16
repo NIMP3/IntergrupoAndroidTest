@@ -6,19 +6,22 @@ import androidx.recyclerview.widget.RecyclerView
 import co.dev.yovany.intergrupoandroidtest.country.model.Country
 import co.dev.yovany.intergrupoandroidtest.databinding.CardviewCountryBinding
 
-class CountryRecyclerViewAdapter(private val resource: Int): RecyclerView.Adapter<CountryRecyclerViewAdapter.CountryViewHolder>(){
+class CountryRecyclerViewAdapter(private val resource: Int, private val listener: (Country) -> Unit): RecyclerView.Adapter<CountryRecyclerViewAdapter.CountryViewHolder>(){
 
     var countries: List<Country> = emptyList()
 
-    inner class CountryViewHolder(private val binding: CardviewCountryBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class CountryViewHolder(private val binding: CardviewCountryBinding, private val listener: (Country) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         fun bind(country: Country) {
-
+            binding.apply {
+                tvCountryName.text = country.name
+                btnShowMap.setOnClickListener { listener(country) }
+            }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CountryViewHolder {
         val binding = CardviewCountryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return CountryViewHolder(binding)
+        return CountryViewHolder(binding, listener)
     }
 
     override fun onBindViewHolder(holder: CountryViewHolder, position: Int) {

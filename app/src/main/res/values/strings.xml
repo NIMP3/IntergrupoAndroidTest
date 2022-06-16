@@ -6,4 +6,5 @@
     <string name="message_error_connection">¡Parece que no hay Internet!\nPor favor revisa tu conexión para seguir navegando</string>
     <string name="message_error_no_network">En el momento no tienes conexión a internet.</string>
     <string name="message_no_data">No se encontraron</string>
+    <string name="message_status_load">Buscando %1$s …</string>
 </resources>

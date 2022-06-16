@@ -17,7 +17,7 @@ class CountryInteractor(
     }
 
     fun getCountries(serverCallBack: ServerCallBack) {
-        if (NetworkUtility.wifiConnected(context)) repository.getCountries("", serverCallBack)
+        if (NetworkUtility.wifiConnected(context)) repository.getCountries("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJ5b3ZhbnkuZGV2QGdtYWlsLmNvbSIsImFwaV90b2tlbiI6IkI2N3dhTC10cDk5bUpNcm1zV2RjOTdna3hnZzhPMmNnU21SRHhFTFkxQjZxUGRiWVlvY29MTGV6bDc5MjJ2cXdmdUkifSwiZXhwIjoxNjU1NDg2ODkyfQ.WsZmWxa3RxLyprdMYSclDAKfngAn37kVPtElyKFvWuE", serverCallBack)
         else serverCallBack.onNetworkError()
     }
 
