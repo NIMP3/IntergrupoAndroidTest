@@ -13,16 +13,9 @@ class CountryInteractor(
     private val repository: CountryRepository = CountryRepository(),
     private val securityUtility: SecurityUtility = SecurityUtility(context)
 ) {
-
-    private var requests = 0
-
     fun getAccessToken(serverCallBack: ServerCallBack) {
-        requests++
-        if (requests <= 2) {
-            if (NetworkUtility.wifiConnected(context)) repository.getAccessToken(BuildConfig.API_TOKEN, BuildConfig.EMAIL, serverCallBack)
-            else serverCallBack.onNetworkError()
-        }
-        else serverCallBack.onServerError("XD45201")
+        if (NetworkUtility.wifiConnected(context)) repository.getAccessToken(BuildConfig.API_TOKEN, BuildConfig.EMAIL, serverCallBack)
+        else serverCallBack.onNetworkError()
     }
 
     fun getCountries(serverCallBack: ServerCallBack) {

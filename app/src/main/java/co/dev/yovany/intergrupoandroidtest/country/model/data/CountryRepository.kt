@@ -9,27 +9,25 @@ import co.dev.yovany.intergrupoandroidtest.country.model.Country
 import co.dev.yovany.intergrupoandroidtest.country.model.ServerError
 import co.dev.yovany.intergrupoandroidtest.country.model.UserToken
 import com.google.gson.Gson
-import com.google.gson.JsonParseException
 import com.google.gson.JsonSyntaxException
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
 
 class CountryRepository {
 
-    private var service: IService = Retrofit.Builder()
-        .baseUrl(EndPoints.DOMAIN)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(IService::class.java)
-
     fun getAccessToken(api_token: String, user_email: String, serverCallBack: ServerCallBack) {
-        Log.i("TOKEN","GET_TOKEN")
         serverCallBack as ICountryContract.ICountryPresenter
 
-        val call = service.getAccessToken(api_token, user_email)
+        val call = createService(true).getAccessToken(api_token, user_email)
         call.enqueue(object : Callback<UserToken> {
             override fun onResponse(call: Call<UserToken>, response: Response<UserToken>) {
                 if (response.isSuccessful) {
@@ -50,7 +48,7 @@ class CountryRepository {
     fun getCountries(token: String, serverCallBack: ServerCallBack) {
         serverCallBack as ICountryContract.ICountryPresenter
 
-        val call = service.getCountries("Bearer $token")
+        val call = createService(false).getCountries("Bearer $token")
         call.enqueue(object : Callback<List<Country>>{
             override fun onResponse(call: Call<List<Country>>, response: Response<List<Country>>) {
                 if (response.isSuccessful) {
@@ -74,12 +72,27 @@ class CountryRepository {
         data?.let {
             try {
                 val serverError : ServerError = Gson().fromJson(data, ServerError::class.java)
-                if (serverError.error.name == "TokenExpiredError") {
-                    Log.i("TOKEN","TokenExpiredError")
-                    serverCallBack.onCountriesError()
-                }
+                if (serverError.error.name == "TokenExpiredError") serverCallBack.onCountriesError()
                 else serverCallBack.onServerError("X234DE")
             } catch (e: JsonSyntaxException) { serverCallBack.onServerError("X234DE") }
         } ?: kotlin.run { serverCallBack.onServerError("X234DE")}
+    }
+
+    private fun createService(hasLimit: Boolean): IService {
+        val dispatcher = Dispatcher(Executors.newFixedThreadPool(20))
+        dispatcher.maxRequests = if (hasLimit) 2 else 20
+        dispatcher.maxRequestsPerHost = 1
+
+        val okHttpClient = OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .connectionPool(ConnectionPool(100, 30, TimeUnit.SECONDS))
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl(EndPoints.DOMAIN)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(okHttpClient)
+            .build()
+            .create(IService::class.java)
     }
 }
