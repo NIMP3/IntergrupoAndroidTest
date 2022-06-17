@@ -1,27 +1,40 @@
 package co.dev.yovany.intergrupoandroidtest.country
 
 import android.content.Context
+import android.util.Log
 import co.dev.yovany.intergrupoandroidtest.BuildConfig
-import co.dev.yovany.intergrupoandroidtest.common.IService
 import co.dev.yovany.intergrupoandroidtest.common.NetworkUtility
+import co.dev.yovany.intergrupoandroidtest.common.SecurityUtility
 import co.dev.yovany.intergrupoandroidtest.common.ServerCallBack
-import co.dev.yovany.intergrupoandroidtest.country.model.data.cloud.CountryRepository
+import co.dev.yovany.intergrupoandroidtest.country.model.data.CountryRepository
 
 class CountryInteractor(
     val context: Context,
-    val repository: CountryRepository = CountryRepository()
+    private val repository: CountryRepository = CountryRepository(),
+    private val securityUtility: SecurityUtility = SecurityUtility(context)
 ) {
+
+    private var requests = 0
+
     fun getAccessToken(serverCallBack: ServerCallBack) {
-        if (NetworkUtility.wifiConnected(context)) repository.getAccessToken(BuildConfig.API_TOKEN, BuildConfig.EMAIL, serverCallBack)
-        else serverCallBack.onNetworkError()
+        requests++
+        if (requests <= 2) {
+            if (NetworkUtility.wifiConnected(context)) repository.getAccessToken(BuildConfig.API_TOKEN, BuildConfig.EMAIL, serverCallBack)
+            else serverCallBack.onNetworkError()
+        }
+        else serverCallBack.onServerError("XD45201")
     }
 
     fun getCountries(serverCallBack: ServerCallBack) {
-        if (NetworkUtility.wifiConnected(context)) repository.getCountries("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJ5b3ZhbnkuZGV2QGdtYWlsLmNvbSIsImFwaV90b2tlbiI6IkI2N3dhTC10cDk5bUpNcm1zV2RjOTdna3hnZzhPMmNnU21SRHhFTFkxQjZxUGRiWVlvY29MTGV6bDc5MjJ2cXdmdUkifSwiZXhwIjoxNjU1NDg2ODkyfQ.WsZmWxa3RxLyprdMYSclDAKfngAn37kVPtElyKFvWuE", serverCallBack)
+        if (NetworkUtility.wifiConnected(context)) {
+            securityUtility.getUserToken()?.let { token ->
+                repository.getCountries(token, serverCallBack)
+            } ?: kotlin.run {
+                getAccessToken(serverCallBack)
+            }
+        }
         else serverCallBack.onNetworkError()
     }
 
-    private fun processUserToken(token: String) {
-
-    }
+    fun processUserToken(token: String) { securityUtility.encryptUserToken(token) }
 }

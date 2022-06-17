@@ -1,11 +1,16 @@
-package co.dev.yovany.intergrupoandroidtest.country.model.data.cloud
+package co.dev.yovany.intergrupoandroidtest.country.model.data
 
+import android.util.Log
 import co.dev.yovany.intergrupoandroidtest.common.EndPoints
 import co.dev.yovany.intergrupoandroidtest.common.IService
 import co.dev.yovany.intergrupoandroidtest.common.ServerCallBack
 import co.dev.yovany.intergrupoandroidtest.country.ICountryContract
 import co.dev.yovany.intergrupoandroidtest.country.model.Country
+import co.dev.yovany.intergrupoandroidtest.country.model.ServerError
 import co.dev.yovany.intergrupoandroidtest.country.model.UserToken
+import com.google.gson.Gson
+import com.google.gson.JsonParseException
+import com.google.gson.JsonSyntaxException
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -21,6 +26,7 @@ class CountryRepository {
         .create(IService::class.java)
 
     fun getAccessToken(api_token: String, user_email: String, serverCallBack: ServerCallBack) {
+        Log.i("TOKEN","GET_TOKEN")
         serverCallBack as ICountryContract.ICountryPresenter
 
         val call = service.getAccessToken(api_token, user_email)
@@ -52,7 +58,7 @@ class CountryRepository {
                         serverCallBack.onCountriesFound(it)
                     } ?: kotlin.run { serverCallBack.onSystemError("X3D452") }
                 }
-                else serverCallBack.onServerError("X234DE")
+                else processServerError(response.errorBody()?.string(), serverCallBack)
             }
 
             override fun onFailure(call: Call<List<Country>>, t: Throwable) {
@@ -60,5 +66,20 @@ class CountryRepository {
             }
 
         })
+    }
+
+    private fun processServerError(data: String?, serverCallBack: ServerCallBack) {
+        serverCallBack as ICountryContract.ICountryPresenter
+
+        data?.let {
+            try {
+                val serverError : ServerError = Gson().fromJson(data, ServerError::class.java)
+                if (serverError.error.name == "TokenExpiredError") {
+                    Log.i("TOKEN","TokenExpiredError")
+                    serverCallBack.onCountriesError()
+                }
+                else serverCallBack.onServerError("X234DE")
+            } catch (e: JsonSyntaxException) { serverCallBack.onServerError("X234DE") }
+        } ?: kotlin.run { serverCallBack.onServerError("X234DE")}
     }
 }

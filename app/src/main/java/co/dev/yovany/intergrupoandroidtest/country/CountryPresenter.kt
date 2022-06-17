@@ -23,8 +23,13 @@ class CountryPresenter(view: IView, context: Context, private val interactor: Co
         (view as ICountryContract.ICountryListView).showCountries(countries)
     }
 
+    override fun onCountriesError() {
+        interactor.getAccessToken(this)
+    }
+
     override fun onUserTokenFound(userToken: UserToken) {
-        Log.i("USER_TOKEN: ", userToken.auth_token)
+        interactor.processUserToken(userToken.auth_token)
+        interactor.getCountries(this)
     }
 }
 
@@ -38,6 +43,7 @@ interface ICountryContract {
         fun showCountries(countries: List<Country>)
 
         fun onCountriesFound(countries: List<Country>)
+        fun onCountriesError()
         fun onUserTokenFound(userToken: UserToken)
     }
 }

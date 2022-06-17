@@ -14,6 +14,9 @@ class CountryRecyclerViewAdapter(private val resource: Int, private val listener
         fun bind(country: Country) {
             binding.apply {
                 tvCountryName.text = country.name
+                tvShortName.text = country.short_name
+                tvPhoneCode.text = country.phone_code.toString()
+
                 btnShowMap.setOnClickListener { listener(country) }
             }
         }
